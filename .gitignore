@@ -6,6 +6,10 @@ data/
 *.sqlite-shm
 .backup/
 .incoming/
+# Config por host (ley 9)
+env.json
+env.local.json
+
 # Secretos
 .env
 .env.*

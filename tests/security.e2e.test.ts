@@ -1,10 +1,12 @@
-// tests/security.e2e.test.ts — arranca el server y prueba login + penalización reales
+// tests/security.e2e.test.ts — arranca el server (env.json aislado) y prueba login + penalización reales
 import { assertEquals } from "jsr:@std/assert@1";
 import { dirname, join } from "node:path";
 
 const ROOT = dirname(import.meta.dirname!);
 const PORT = 8199;
 const BASE = "http://127.0.0.1:" + PORT;
+const USR = "jagudeloe";
+const PASS = "udtccsso";
 
 async function waitUp(server: Deno.ChildProcess, tries = 80) {
   let exited = false;
@@ -12,7 +14,7 @@ async function waitUp(server: Deno.ChildProcess, tries = 80) {
   for (let i = 0; i < tries; i++) {
     if (exited) throw new Error("el server terminó antes de responder (ver stderr)");
     try {
-      const r = await fetch(BASE + "/api/permisos");
+      const r = await fetch(BASE + "/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
       await r.body?.cancel();
       return;
     } catch { /* aún no */ }
@@ -25,36 +27,40 @@ async function login(password: string) {
   const r = await fetch(BASE + "/api/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ usuario: "jagudeloe", password }),
+    body: JSON.stringify({ usuario: USR, password }),
   });
   return { status: r.status, body: await r.json().catch(() => ({})) };
 }
 
-// Deno.test solo registra: el server debe vivir dentro del test, no a nivel de módulo.
 Deno.test("e2e seguridad: login y penalización", async (t) => {
   const tmp = await Deno.makeTempDir();
+  // env.json + secrets.json aislados: el server arranca solo con env.json (ley 9).
+  await Deno.writeTextFile(join(tmp, "env.json"), JSON.stringify({
+    app: "erp-sqlite-api",
+    port: PORT,
+    host: "127.0.0.1",
+    db: { root: tmp, sistema: "admin.sqlite" },
+    identity: { adminUser: USR, expiresIn: 3600 },
+    secrets: { jwtSecret: "$secret:test.jwtSecret", adminPassword: "$secret:test.adminPassword" },
+    exposeErrors: true,
+  }));
+  await Deno.writeTextFile(join(tmp, "secrets.json"), JSON.stringify({
+    test: { jwtSecret: "test-secret-para-e2e-1234567890123456789012", adminPassword: PASS },
+  }));
+
   const server = new Deno.Command(Deno.execPath(), {
-    // Mismos permisos que el servicio systemd (deploy/erp-sqlite-api.service): falla aquí si faltan.
     args: ["run", "--no-check", "--allow-net", "--allow-env", "--allow-read", `--allow-write=${tmp}`, "src/main.ts"],
     cwd: ROOT,
-    env: {
-      ...Deno.env.toObject(),
-      PORT: String(PORT),
-      JWT_SECRET: "test-secret-para-e2e-1234567890123456789012",
-      ADMIN_USER: "jagudeloe",
-      ADMIN_PASSWORD: "udtccsso",
-      DB: join(tmp, "admin.sqlite"),
-      DB_DIR: join(tmp, "db"),
-    },
+    env: { ...Deno.env.toObject(), ENV_JSON: join(tmp, "env.json") },
     stdout: "null",
-    stderr: "inherit", // errores del server visibles en la salida del test
+    stderr: "inherit",
   }).spawn();
 
   try {
     await waitUp(server);
 
     await t.step("login correcto devuelve token", async () => {
-      const { status, body } = await login("udtccsso");
+      const { status, body } = await login(PASS);
       assertEquals(status, 200);
       if (!body.token) throw new Error("sin token");
     });
@@ -66,7 +72,7 @@ Deno.test("e2e seguridad: login y penalización", async (t) => {
     });
 
     await t.step("clave correcta estando bloqueado sigue en 429", async () => {
-      const { status } = await login("udtccsso");
+      const { status } = await login(PASS);
       assertEquals(status, 429);
     });
 

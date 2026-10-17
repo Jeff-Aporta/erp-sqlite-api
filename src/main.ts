@@ -1,28 +1,29 @@
 import { createRouter, sqliteDatabase, ServerController } from "@Jeff-Aporta/DER/src/02 controllers/server/sqlite/mod.ts";
 import { pluginsFromConfig } from "@Jeff-Aporta/DER/src/03 plugins/mod.ts";
+import { loadEnv } from "@Jeff-Aporta/dev-vps/env/mod.ts";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { CatalogoEntity } from "./domain.ts";
-import { DB_DIR, dbAdminRoutes } from "./dbadmin.ts";
+import { dbAdminRoutes, setDbDir } from "./dbadmin.ts";
 
-/** Config obligatoria: sin defaults inseguros, ningún VPS arranca con credenciales de ejemplo. */
-function required(name: string, minLength = 1): string {
-  const v = Deno.env.get(name) ?? "";
-  if (v.length < minLength) {
-    console.error(`✗ falta ${name}${minLength > 1 ? ` (mínimo ${minLength} caracteres)` : ""}; ver .env.example`);
-    Deno.exit(1);
-  }
-  return v;
-}
+/** Config de env.json (norma única). Sin secrets.* válidos el server NO arranca. */
+const { env } = await loadEnv();
 
-const JWT_SECRET = required("JWT_SECRET", 32);
-const ADMIN_USER = required("ADMIN_USER");
-const ADMIN_PASSWORD = required("ADMIN_PASSWORD", 8);
-// Usuarios, sesiones y auditoría: también en db/, en `_sistema/` (db-admin solo ve *.sqlite del primer nivel).
-const DB = Deno.env.get("DB") ?? join(DB_DIR, "_sistema", "admin.sqlite");
-const PORT = Number(Deno.env.get("PORT") ?? 8091);
-const HOST = Deno.env.get("HOST") ?? "127.0.0.1";
+const identity = (env.identity ?? {}) as { adminUser?: string; expiresIn?: number };
+const dbCfg = env.db as { root: string; sistema?: string };
+const JWT_SECRET = String(env.secrets?.jwtSecret ?? "");
+const ADMIN_USER = identity.adminUser ?? "admin";
+const ADMIN_PASSWORD = String(env.secrets?.adminPassword ?? "");
+const DB_DIR = dbCfg.root;
+const DB = join(DB_DIR, dbCfg.sistema ?? "_sistema/admin.sqlite");
+const PORT = env.port;
+const HOST = env.host;
+const EXPOSE_ERRORS = env.exposeErrors === true;
 
+if (JWT_SECRET.length < 32) { console.error("✗ env.json: secrets.jwtSecret debe tener ≥32 caracteres"); Deno.exit(1); }
+if (ADMIN_PASSWORD.length < 8) { console.error("✗ env.json: secrets.adminPassword debe tener ≥8 caracteres"); Deno.exit(1); }
+
+setDbDir(DB_DIR);
 mkdirSync(dirname(DB), { recursive: true });
 mkdirSync(DB_DIR, { recursive: true });
 const db = sqliteDatabase(DB);
@@ -37,7 +38,7 @@ const ctrls = {
 const plugins = pluginsFromConfig({
   identity: {
     secret: JWT_SECRET,
-    expiresIn: 28800,
+    expiresIn: identity.expiresIn ?? 28800,
     admin: { usuario: ADMIN_USER, password: ADMIN_PASSWORD },
   },
 }, { db });
@@ -45,7 +46,7 @@ const plugins = pluginsFromConfig({
 const router = createRouter(Object.values(ctrls), {
   basePath: "/api",
   plugins,
-  exposeErrors: Deno.env.get("EXPOSE_ERRORS") === "1",
+  exposeErrors: EXPOSE_ERRORS,
   routes: dbAdminRoutes,
 });
 await router.seed();

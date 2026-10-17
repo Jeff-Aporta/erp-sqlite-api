@@ -1,7 +1,7 @@
 {
   "tasks": {
-    "dev": "deno run -A --env-file=.env --watch src/main.ts",
-    "start": "deno run --env-file=.env --allow-net --allow-env --allow-read --allow-write src/main.ts",
+    "dev": "deno run -A --watch src/main.ts",
+    "start": "deno run --allow-net --allow-env --allow-read --allow-write src/main.ts",
     "build:front": "deno run -A scripts/build-front.ts",
     "seed": "deno run -A scripts/seed-demo.ts",
     "check": "deno check src/main.ts scripts/",
@@ -10,6 +10,7 @@
   "imports": {
     "@Jeff-Aporta/DER": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/DER@ab4b4b2940006cc424934deeffd6cbf280a27bfc/mod.ts",
     "@Jeff-Aporta/DER/": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/DER@ab4b4b2940006cc424934deeffd6cbf280a27bfc/",
+    "@Jeff-Aporta/dev-vps/": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/dev-vps@a0faf6e8b99fd5b5f3b15cff8119bc7c3578d6f3/",
     "zod": "npm:zod@4.6.7",
     "kysely": "npm:kysely@0.28.17"
   },
