@@ -1,4 +1,4 @@
-// @vendor-pin 2026-10-17T15:38:00Z
+// @vendor-pin 2026-10-17T16:10:00Z
 /**
  * Contrato de cliente del admin SQLite (repo erp-sqlite/api).
  * El front lo vendoriza en src/vendor/erp-sqlite/front.ts con `deno task vendor:api` (max 90 dias).
@@ -67,7 +67,11 @@ export function createClient(opts: ClientOptions) {
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     const text = await res.text();
-    const data = text ? JSON.parse(text) : null;
+    // Un error de proxy (502 HTML de nginx, 404 estático) no es JSON: se reporta por su status.
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch {
+      if (res.ok) throw new ApiError(res.status, "respuesta_no_json");
+    }
     if (!res.ok) throw new ApiError(res.status, data?.error ?? "http_" + res.status, data?.detail);
     return data as T;
   }
