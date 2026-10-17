@@ -13,7 +13,7 @@ import type { ExtraRoute } from "@Jeff-Aporta/DER/src/02 controllers/server/sche
 
 const here = dirname(fileURLToPath(import.meta.url));
 /** Bases centralizadas en `erp-sqlite/db` (raíz del monorepo; en el VPS, /opt/erp-sqlite/db). */
-export const DB_DIR = Deno.env.get("DB_DIR") ?? join(here, "..", "..", "db");
+export const DB_DIR = Deno.env.get("DB_DIR") ?? join(here, "..", "..", "..", "db");
 
 const NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*\.sqlite$/;
 const OPS: Record<string, string> = {

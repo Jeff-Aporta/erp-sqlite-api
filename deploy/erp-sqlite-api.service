@@ -7,7 +7,7 @@ Wants=network-online.target
 [Service]
 User=erp-sqlite
 Group=erp-sqlite
-WorkingDirectory=/opt/erp-sqlite/api
+WorkingDirectory=/opt/erp-sqlite/app/erp-sqlite-api
 EnvironmentFile=/etc/erp-sqlite/api.env
 # Permisos mínimos: red, env, lectura; escritura solo en datos. Mismos flags que el e2e del repo.
 ExecStart=/usr/local/bin/deno run --cached-only --allow-net --allow-env --allow-read --allow-write=/opt/erp-sqlite/db src/main.ts
