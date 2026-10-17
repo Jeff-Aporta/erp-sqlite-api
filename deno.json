@@ -8,9 +8,9 @@
     "test": "deno test -A tests/"
   },
   "imports": {
-    "@Jeff-Aporta/DER": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/DER@ab4b4b2940006cc424934deeffd6cbf280a27bfc/mod.ts",
-    "@Jeff-Aporta/DER/": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/DER@ab4b4b2940006cc424934deeffd6cbf280a27bfc/",
-    "@Jeff-Aporta/dev-vps/": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/dev-vps@a0faf6e8b99fd5b5f3b15cff8119bc7c3578d6f3/",
+    "@Jeff-Aporta/DER": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/DER@c4a62a1594f8f6b7ccfbda22e83965be0749ce9f/mod.ts",
+    "@Jeff-Aporta/DER/": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/DER@c4a62a1594f8f6b7ccfbda22e83965be0749ce9f/",
+    "@Jeff-Aporta/dev-vps/": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/dev-vps@57e0d043f3a64876558afda9c37ac472db849c65/",
     "zod": "npm:zod@4.6.7",
     "kysely": "npm:kysely@0.28.17"
   },
