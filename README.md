@@ -56,3 +56,7 @@ Servicio `erp-sqlite-api` (`deploy/erp-sqlite-api.service`): usuario sin privile
 `/api/login` · `/api/logout` · `/api/logout/all` · `/api/sessions` · `/api/password` · `/api/events`
 (DER identity) · `/api/catalogos` (DER) · `/api/db-admin/*` (databases, objects, columns, rows,
 stats, query, vacuum, integrity). Contrato tipado en `src/contract/front.ts`.
+
+## Norma
+
+[ESTANDAR — ecosistema VPS](https://github.com/Jeff-Aporta/dev-vps/blob/main/ESTANDAR.md): norma única; gana sobre este repo si hay conflicto.
