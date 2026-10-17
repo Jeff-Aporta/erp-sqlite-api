@@ -5,10 +5,7 @@
     "build:front": "deno run -A scripts/build-front.ts",
     "seed": "deno run -A scripts/seed-demo.ts",
     "check": "deno check src/main.ts scripts/",
-    "test": "deno test -A tests/",
-    "sync:vps": "deno run -A scripts/sync-vps.ts code",
-    "sync:db:pull": "deno run -A scripts/sync-vps.ts db:pull",
-    "sync:db:push": "deno run -A scripts/sync-vps.ts db:push"
+    "test": "deno test -A tests/"
   },
   "imports": {
     "@Jeff-Aporta/DER": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/DER@ab4b4b2940006cc424934deeffd6cbf280a27bfc/mod.ts",

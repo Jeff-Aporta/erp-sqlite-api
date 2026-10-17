@@ -18,7 +18,8 @@ function required(name: string, minLength = 1): string {
 const JWT_SECRET = required("JWT_SECRET", 32);
 const ADMIN_USER = required("ADMIN_USER");
 const ADMIN_PASSWORD = required("ADMIN_PASSWORD", 8);
-const DB = Deno.env.get("DB") ?? join(import.meta.dirname!, "..", "data", "admin.sqlite");
+// Usuarios, sesiones y auditoría: también en db/, en `_sistema/` (db-admin solo ve *.sqlite del primer nivel).
+const DB = Deno.env.get("DB") ?? join(DB_DIR, "_sistema", "admin.sqlite");
 const PORT = Number(Deno.env.get("PORT") ?? 8091);
 const HOST = Deno.env.get("HOST") ?? "127.0.0.1";
 

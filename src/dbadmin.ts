@@ -12,7 +12,8 @@ import { statSync } from "node:fs";
 import type { ExtraRoute } from "@Jeff-Aporta/DER/src/02 controllers/server/schemas.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
-export const DB_DIR = Deno.env.get("DB_DIR") ?? join(here, "..", "data", "db");
+/** Bases centralizadas en `erp-sqlite/db` (raíz del monorepo; en el VPS, /opt/erp-sqlite/db). */
+export const DB_DIR = Deno.env.get("DB_DIR") ?? join(here, "..", "..", "db");
 
 const NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*\.sqlite$/;
 const OPS: Record<string, string> = {
