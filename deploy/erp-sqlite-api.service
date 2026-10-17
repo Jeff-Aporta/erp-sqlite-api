@@ -1,0 +1,28 @@
+# systemd: API de erp-sqlite (Deno + DER). Lo instala deploy/install.sh.
+[Unit]
+Description=erp-sqlite api (Deno + DER, SQLite)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=erp-sqlite
+Group=erp-sqlite
+WorkingDirectory=/opt/erp-sqlite/api
+EnvironmentFile=/etc/erp-sqlite/api.env
+# Permisos mínimos: red, env, lectura; escritura solo en datos. Mismos flags que el e2e del repo.
+ExecStart=/usr/local/bin/deno run --cached-only --allow-net --allow-env --allow-read --allow-write=/opt/erp-sqlite/db,/opt/erp-sqlite/state src/main.ts
+Restart=on-failure
+RestartSec=3
+
+# Endurecimiento: el proceso no ve /home, no escala privilegios y el sistema es de solo lectura.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/erp-sqlite/db /opt/erp-sqlite/state /opt/erp-sqlite/.deno
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

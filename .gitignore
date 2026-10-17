@@ -1,0 +1,12 @@
+node_modules/
+# Datos y estado: nunca al repo (se sincronizan con sync:db:*).
+data/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+.backup/
+.incoming/
+# Secretos
+.env
+.env.*
+!.env.example
