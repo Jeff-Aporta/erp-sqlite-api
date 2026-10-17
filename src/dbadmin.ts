@@ -8,7 +8,7 @@
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { statSync } from "node:fs";
+import { copyFileSync, existsSync, rmSync, statSync } from "node:fs";
 import type { ExtraRoute } from "@Jeff-Aporta/DER/src/02 controllers/server/schemas.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -188,8 +188,12 @@ function runQuery(path: string, body: any) {
   const db = openDb(path, !allowWrite);
   try {
     const stmt = db.prepare(sql);
-    const rows = stmt.all();
-    return { keyword, rowCount: rows.length, rows };
+    if (READONLY_KW.has(keyword)) {
+      const rows = stmt.all();
+      return { keyword, rowCount: rows.length, rows };
+    }
+    const r = stmt.run();
+    return { keyword, changes: Number(r.changes ?? 0), lastInsertRowid: String(r.lastInsertRowid ?? "") };
   } finally { db.close(); }
 }
 
@@ -217,6 +221,89 @@ function listDatabases() {
   return out.sort();
 }
 
+
+/** Crea una base .sqlite vacía. */
+function createDatabase(body: any) {
+  const name = String(body?.name ?? "").trim();
+  if (!NAME_RE.test(name)) throw new HttpErr(400, "bad_db_name", name);
+  const full = join(DB_DIR, name);
+  if (existsSync(full)) throw new HttpErr(409, "db_exists", name);
+  const db = new DatabaseSync(full);
+  try { db.exec("PRAGMA journal_mode=WAL"); } finally { db.close(); }
+  return { ok: true, name };
+}
+
+/** Borra una base (exige confirm: true). */
+function dropDatabase(raw: string, body: any) {
+  if (body?.confirm !== true) throw new HttpErr(400, "confirm_required", "envia confirm: true");
+  const path = resolveDb(raw);
+  for (const ext of ["", "-wal", "-shm"]) { try { rmSync(path + ext, { force: true }); } catch { /* noop */ } }
+  return { ok: true };
+}
+
+/** Duplica una base (copia consistente tras checkpoint). */
+function duplicateDatabase(raw: string, body: any) {
+  const path = resolveDb(raw);
+  const newName = String(body?.newName ?? "").trim();
+  if (!NAME_RE.test(newName)) throw new HttpErr(400, "bad_db_name", newName);
+  const dst = join(DB_DIR, newName);
+  if (existsSync(dst)) throw new HttpErr(409, "db_exists", newName);
+  const db = openDb(path, false);
+  try { db.exec("PRAGMA wal_checkpoint(TRUNCATE)"); } finally { db.close(); }
+  copyFileSync(path, dst);
+  return { ok: true, name: newName };
+}
+
+/** Vacía una tabla (DELETE FROM; exige allowWrite). */
+function truncateTable(path: string, table: string, body: any) {
+  if (body?.allowWrite !== true) throw new HttpErr(403, "write_not_allowed");
+  const db = openDb(path, false);
+  try {
+    const exists = db.prepare("SELECT 1 AS ok FROM sqlite_master WHERE name = ? AND type = 'table'").get(table);
+    if (!exists) throw new HttpErr(404, "table_not_found", table);
+    db.exec("DELETE FROM " + q(table));
+    return { ok: true, table };
+  } finally { db.close(); }
+}
+
+/** Exporta una tabla/vista a JSON o CSV (solo lectura). */
+function exportTable(path: string, table: string, fmt: string): string {
+  const db = openDb(path, true);
+  try {
+    const exists = db.prepare("SELECT 1 AS ok FROM sqlite_master WHERE name = ? AND type IN ('table','view')").get(table);
+    if (!exists) throw new HttpErr(404, "table_not_found", table);
+    const rows = db.prepare("SELECT * FROM " + q(table)).all() as Record<string, unknown>[];
+    if (fmt === "csv") {
+      const cols = rows.length ? Object.keys(rows[0]!) : [];
+      const esc = (v: unknown) => v == null ? "" : '"' + String(v).replace(/"/g, '""') + '"';
+      return cols.join(",") + "\n" + rows.map((r) => cols.map((c) => esc(r[c])).join(",")).join("\n");
+    }
+    return JSON.stringify(rows, null, 2);
+  } finally { db.close(); }
+}
+
+/** Inserta filas (JSON) en una tabla existente, en una transacción. */
+function importTable(path: string, table: string, body: any) {
+  if (body?.allowWrite !== true) throw new HttpErr(403, "write_not_allowed");
+  const rows = Array.isArray(body?.rows) ? body.rows as Record<string, unknown>[] : [];
+  if (!rows.length) throw new HttpErr(400, "no_rows");
+  const db = openDb(path, false);
+  try {
+    const exists = db.prepare("SELECT 1 AS ok FROM sqlite_master WHERE name = ? AND type = 'table'").get(table);
+    if (!exists) throw new HttpErr(404, "table_not_found", table);
+    const cols = Object.keys(rows[0]!);
+    if (!cols.length) throw new HttpErr(400, "no_columns");
+    const stmt = db.prepare("INSERT INTO " + q(table) + " (" + cols.map(q).join(",") + ") VALUES (" + cols.map(() => "?").join(",") + ")");
+    let inserted = 0;
+    db.exec("BEGIN");
+    try {
+      for (const r of rows) { stmt.run(...cols.map((c) => (r[c] ?? null) as SQLInputValue)); inserted++; }
+      db.exec("COMMIT");
+    } catch (e) { db.exec("ROLLBACK"); throw e; }
+    return { ok: true, inserted };
+  } finally { db.close(); }
+}
+
 /** Envuelve un handler: mapea HttpErr a Response con status. */
 const h = (fn: (i: any) => unknown) => (input: any) => {
   try { return fn(input); } catch (e) {
@@ -229,6 +316,12 @@ const SEC = { protected: true, permissions: false } as const;
 
 export const dbAdminRoutes: ExtraRoute[] = [
   { method: "GET", path: "db-admin/databases", security: SEC, handler: h(() => ({ databases: listDatabases() })) },
+  { method: "POST", path: "db-admin/databases", security: SEC, handler: h(({ body }) => createDatabase(body)) },
+  { method: "DELETE", path: "db-admin/{db}", security: SEC, handler: h(({ params, body }) => dropDatabase(params.db, body)) },
+  { method: "POST", path: "db-admin/{db}/duplicate", security: SEC, handler: h(({ params, body }) => duplicateDatabase(params.db, body)) },
+  { method: "POST", path: "db-admin/{db}/truncate/{table}", security: SEC, handler: h(({ params, body }) => truncateTable(resolveDb(params.db), params.table, body)) },
+  { method: "GET", path: "db-admin/{db}/export/{table}", security: SEC, handler: h(({ params, query }) => exportTable(resolveDb(params.db), params.table, String(query?.get?.("format") ?? "json").toLowerCase())) },
+  { method: "POST", path: "db-admin/{db}/import/{table}", security: SEC, handler: h(({ params, body }) => importTable(resolveDb(params.db), params.table, body)) },
   { method: "GET", path: "db-admin/{db}/objects", security: SEC, handler: h(({ params }) => objects(resolveDb(params.db))) },
   { method: "GET", path: "db-admin/{db}/columns/{table}", security: SEC, handler: h(({ params }) => columns(resolveDb(params.db), params.table)) },
   { method: "POST", path: "db-admin/{db}/rows", security: SEC, handler: h(({ params, body }) => buildRows(resolveDb(params.db), body)) },
