@@ -35,11 +35,13 @@ const ctrls = {
   }),
 };
 
+const trustedIssuers = (env.identity?.trustedIssuers ?? []) as Array<{ name: string; jwksUrl: string; issuer?: string }>;
 const plugins = pluginsFromConfig({
   identity: {
     secret: JWT_SECRET,
     expiresIn: identity.expiresIn ?? 28800,
     admin: { usuario: ADMIN_USER, password: ADMIN_PASSWORD },
+    trustedIssuers,
   },
 }, { db });
 
