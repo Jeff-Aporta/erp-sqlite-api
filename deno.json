@@ -8,7 +8,7 @@
     "test": "deno test -A tests/"
   },
   "imports": {
-    "@Jeff-Aporta/DER": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/DER@c773a2a16f337ab58af4d7a1f4cb17b4dfbc1f1b/mod.ts",
+    "@Jeff-Aporta/DER": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/DER@d4d4b5418bd6a4c9a5d960a35998ba63318f6745/mod.ts",
     "@Jeff-Aporta/DER/": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/DER@c773a2a16f337ab58af4d7a1f4cb17b4dfbc1f1b/",
     "@Jeff-Aporta/dev-vps/": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/dev-vps@57e0d043f3a64876558afda9c37ac472db849c65/",
     "zod": "npm:zod@4.6.7",
