@@ -8,8 +8,8 @@
     "test": "deno test -A tests/"
   },
   "imports": {
-    "@Jeff-Aporta/DER": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/DER@84326ccbbbb313720e4289e22ab9b9163bb8dc4b/mod.ts",
-    "@Jeff-Aporta/DER/": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/DER@84326ccbbbb313720e4289e22ab9b9163bb8dc4b/",
+    "@Jeff-Aporta/DER": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/DER@6e292978630f71eb1bbc68ce8c688203e266bf59/mod.ts",
+    "@Jeff-Aporta/DER/": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/DER@6e292978630f71eb1bbc68ce8c688203e266bf59/",
     "@Jeff-Aporta/dev-vps/": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/dev-vps@57e0d043f3a64876558afda9c37ac472db849c65/",
     "zod": "npm:zod@4.6.7",
     "kysely": "npm:kysely@0.28.17"
