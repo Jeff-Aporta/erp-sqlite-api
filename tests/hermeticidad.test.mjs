@@ -18,6 +18,8 @@ const ABSOLUTA = /(?<![\w.])(?:[A-Za-z]:(?:\\\\|\\|\/\/?)(?:VPS|Dev|ContaPyme[\w
 const RELATIVA = /(['"`])((?:\.\.(?:\/|\\\\|\\))+[^'"`\s]*)\1|\]\(((?:\.\.\/)+[^)\s]*)\)/g;
 // Segmentos de subida encadenados como argumentos de join/resolve.
 const SEGMENTOS = /(['"])\.\.\1(?:\s*,\s*(['"])\.\.\2)+/g;
+// Subir desde la raíz del proyecto: join(RAIZ, <dos puntos>…).
+const DESDE_RAIZ = /\b(?:raiz|RAIZ|root|ROOT|Raiz|Root)\s*,\s*(['"])\.\.\1/g;
 // Dependencias por ruta local en manifiestos.
 const DEP_LOCAL = /"(?:file|link|portal):(?!\/\/)[^"]*"/g;
 
@@ -53,7 +55,7 @@ function revisarHermeticidad(raiz, ignorar = []) {
   const violaciones = [];
   const archivos = archivosVersionados(raiz);
   // Sufijos de todo lo versionado: una URL relativa que "sube" pero cuyo destino existe dentro
-  // del proyecto (p. ej. '../../components/x.js' servido desde dist/cdn/) es interna.
+  // del proyecto (p. ej. una URL a components/x.js que sube desde dist/cdn/) es interna.
   const sufijos = new Set();
   for (const { ruta } of archivos) {
     const partes = ruta.split('/');
@@ -94,6 +96,7 @@ function revisarHermeticidad(raiz, ignorar = []) {
         const n = m[0].match(/\.\./g).length;
         if (n > profundidad) violaciones.push(donde + ": sale del proyecto ('..' x" + n + ')');
       }
+      for (const m of linea.matchAll(DESDE_RAIZ)) violaciones.push(donde + ': sale del proyecto (sube desde la raíz) ' + m[0]);
       if (/(^|\/)(package\.json|deno\.jsonc?)$/.test(ruta)) {
         for (const m of linea.matchAll(DEP_LOCAL)) violaciones.push(donde + ': dependencia local ' + m[0]);
       }
