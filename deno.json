@@ -10,7 +10,7 @@
   "imports": {
     "@Jeff-Aporta/DER": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/DER@cc6ba8e40d8a7d83780ed9a80f20a1102b31edab/mod.ts",
     "@Jeff-Aporta/DER/": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/DER@cc6ba8e40d8a7d83780ed9a80f20a1102b31edab/",
-    "@Jeff-Aporta/dev-vps/": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/dev-vps@57e0d043f3a64876558afda9c37ac472db849c65/",
+    "@Jeff-Aporta/dsh-dev-vps/": "https://cdn.jsdelivr.net/gh/Jeff-Aporta/dsh-dev-vps@6c08af9c48235be7eeefb0062ec09901855dcf96/",
     "zod": "npm:zod@4.6.7",
     "kysely": "npm:kysely@0.28.17"
   },

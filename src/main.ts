@@ -1,6 +1,6 @@
 import { createRouter, sqliteDatabase, ServerController } from "@Jeff-Aporta/DER/src/02 controllers/server/sqlite/mod.ts";
 import { pluginsFromConfig } from "@Jeff-Aporta/DER/src/03 plugins/mod.ts";
-import { loadEnv } from "@Jeff-Aporta/dev-vps/env/mod.ts";
+import { loadEnv } from "@Jeff-Aporta/dsh-dev-vps/env/mod.ts";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { CatalogoEntity } from "./domain.ts";
