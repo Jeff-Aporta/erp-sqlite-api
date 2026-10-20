@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const dbDir = Deno.env.get("DB_DIR") ?? join(here, "..", "..", "db");
+const dbDir = Deno.env.get("DB_DIR") ?? join(here, "..", "data");
 mkdirSync(dbDir, { recursive: true });
 const file = join(dbDir, "demo.sqlite");
 if (existsSync(file)) { console.log("ya existe:", file); Deno.exit(0); }

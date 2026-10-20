@@ -7,12 +7,15 @@ Es un submódulo del monorepo [`erp-sqlite`](https://github.com/Jeff-Aporta/erp-
 El front es [`erp-sqlite-front`](https://github.com/Jeff-Aporta/erp-sqlite-front) y consume el SDK
 `dist/cdn/front.ts` por CDN. Instalación, nginx y sincronización con el VPS viven en el monorepo.
 
-## Bases: siempre en `erp-sqlite/db`
+## Bases: `db.root` de env.json
 
-| Qué | Ruta (default) |
+| Qué | Ruta |
 |---|---|
-| Bases administradas (`*.sqlite`) | `../../db` → `erp-sqlite/db` (VPS: `/opt/erp-sqlite/db`) |
-| Usuarios, sesiones, auditoría | `../../db/_sistema/admin.sqlite` (db-admin no la ve: solo lista `*.sqlite` del primer nivel) |
+| Bases administradas (`*.sqlite`) | `db.root` (default del ejemplo: `data/` de este proyecto, ignorado por git) |
+| Usuarios, sesiones, auditoría | `<db.root>/_sistema/admin.sqlite` (db-admin no la ve: solo lista `*.sqlite` del primer nivel) |
+
+En el despliegue del monorepo, su `env.json` (por host, no versionado) apunta `db.root` a la carpeta
+`db` del monorepo (VPS: `/opt/erp-sqlite-new/db`). El repo no asume dónde vive: es hermético.
 
 `DB_DIR` y `DB` existen para pruebas; en uso normal no se cambian.
 
@@ -30,7 +33,7 @@ El front es [`erp-sqlite-front`](https://github.com/Jeff-Aporta/erp-sqlite-front
 ```bash
 cp .env.example .env      # completar JWT_SECRET / ADMIN_PASSWORD
 deno install
-deno task seed            # opcional: ../../db/demo.sqlite
+deno task seed            # opcional: data/demo.sqlite (o $DB_DIR/demo.sqlite)
 deno task start           # http://127.0.0.1:8091/api
 ```
 

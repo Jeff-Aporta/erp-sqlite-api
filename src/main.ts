@@ -9,7 +9,8 @@ import { dbAdminRoutes, setDbDir } from "./dbadmin.ts";
 /** Config de env.json (norma única). Sin secrets.* válidos el server NO arranca. */
 const { env } = await loadEnv();
 
-const identity = (env.identity ?? {}) as { adminUser?: string; expiresIn?: number };
+type Emisor = { name: string; jwksUrl: string; issuer?: string };
+const identity = (env.identity ?? {}) as { adminUser?: string; expiresIn?: number; trustedIssuers?: Emisor[] };
 const dbCfg = env.db as { root: string; sistema?: string };
 const JWT_SECRET = String(env.secrets?.jwtSecret ?? "");
 const ADMIN_USER = identity.adminUser ?? "admin";
@@ -35,7 +36,7 @@ const ctrls = {
   }),
 };
 
-const trustedIssuers = (env.identity?.trustedIssuers ?? []) as Array<{ name: string; jwksUrl: string; issuer?: string }>;
+const trustedIssuers = identity.trustedIssuers ?? [];
 const plugins = pluginsFromConfig({
   identity: {
     secret: JWT_SECRET,

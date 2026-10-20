@@ -12,8 +12,8 @@ import { copyFileSync, existsSync, rmSync, statSync } from "node:fs";
 import type { ExtraRoute } from "@Jeff-Aporta/DER/src/02 controllers/server/schemas.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
-/** Bases centralizadas en `erp-sqlite/db` (raíz del monorepo; en el VPS, /opt/erp-sqlite/db). */
-export let DB_DIR = Deno.env.get("DB_DIR") ?? join(here, "..", "..", "..", "db");
+/** Bases: db.root de env.json (main.ts llama a setDbDir); sin él, `data/` del propio proyecto. */
+export let DB_DIR = Deno.env.get("DB_DIR") ?? join(here, "..", "data");
 
 /** La API fija la ruta real de db.root (env.json) antes de servir. */
 export function setDbDir(path: string) { DB_DIR = path; }
