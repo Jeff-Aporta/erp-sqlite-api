@@ -66,6 +66,7 @@ function revisarHermeticidad(raiz, ignorar = []) {
   const interna = (rel) => {
     const cola = rel.replace(/^(?:\.\.\/)+/, '').split(/[?#$<*{]/)[0].replace(/\/+$/, '').replace(/\/[^/]*\.\.\.$|\.\.\.$/, '');
     if (cola === '' || cola === '.' || sufijos.has(cola)) return true;
+    try { statSync(join(raiz, cola)); return true; } catch { /* no está en disco */ }
     // el fuente puede versionarse con otra extensión que la servida (.ts → .js, .scss → .css)
     const base = cola.replace(/\.(?:min\.)?(js|mjs|css)$/, '');
     return base !== cola && ['.ts', '.mts', '.js', '.mjs', '.min.js', '.scss', '.css', '.min.css'].some((x) => sufijos.has(base + x));
@@ -90,11 +91,11 @@ function revisarHermeticidad(raiz, ignorar = []) {
         const rel = (m[2] ?? m[3]).replace(/\\\\|\\/g, '/');
         if (posix.normalize(posix.join(dir, rel)).startsWith('..') && !interna(rel)) violaciones.push(donde + ': sale del proyecto ' + rel);
       }
-      // join(aqui, <dos puntos>, <dos puntos>…): más subidas que la profundidad del archivo sale del proyecto.
+      // join(aqui, <dos puntos>, <dos puntos>…): más subidas que la profundidad del archivo (+1: la base puede ser el propio archivo) sale del proyecto.
       const profundidad = dir === '.' ? 0 : dir.split('/').length;
       for (const m of linea.matchAll(SEGMENTOS)) {
         const n = m[0].match(/\.\./g).length;
-        if (n > profundidad) violaciones.push(donde + ": sale del proyecto ('..' x" + n + ')');
+        if (n > profundidad + 1) violaciones.push(donde + ": sale del proyecto ('..' x" + n + ')');
       }
       for (const m of linea.matchAll(DESDE_RAIZ)) violaciones.push(donde + ': sale del proyecto (sube desde la raíz) ' + m[0]);
       if (/(^|\/)(package\.json|deno\.jsonc?)$/.test(ruta)) {
