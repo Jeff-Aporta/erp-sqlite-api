@@ -15,7 +15,7 @@ El front es [`erp-sqlite-front`](https://github.com/Jeff-Aporta/erp-sqlite-front
 | Usuarios, sesiones, auditoría | `<db.root>/_sistema/admin.sqlite` (db-admin no la ve: solo lista `*.sqlite` del primer nivel) |
 
 En el despliegue del monorepo, su `env.json` (por host, no versionado) apunta `db.root` a la carpeta
-`db` del monorepo (VPS: `/opt/erp-sqlite-new/db`). El repo no asume dónde vive: es hermético.
+`db` del monorepo (VPS: `/opt/erp-sqlite/db`). El repo no asume dónde vive: es hermético.
 
 `DB_DIR` y `DB` existen para pruebas; en uso normal no se cambian.
 
